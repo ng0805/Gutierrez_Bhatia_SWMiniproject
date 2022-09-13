@@ -5,11 +5,15 @@ const UselessTextInput = () => {
     const [text, onChangeText] = React.useState(null);
     const [number, onChangeNumber] = React.useState(null);
 
+    let displayText = (val) => {
+        onChangeText(val)
+    };
+
     return (
         <SafeAreaView>
             <TextInput
                 style={styles.input}
-                onSubmitEditing={(value) => onChangeText(value.nativeEvent.text)}
+                onSubmitEditing={(value) => displayText(value.nativeEvent.text)}
                 placeholder="Text Submit Placeholder"
             />
             <Text>Submit Text: {text} </Text>
