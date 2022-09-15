@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1003272958417",
+    "project_id": "miniproj-396eb",
+    "storage_bucket": "miniproj-396eb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1003272958417:android:10d7272efd6cf86528b0f0",
+        "android_client_info": {
+          "package_name": "com.twitterbotsentimentdetector"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1003272958417-78fcj8bv623iqthe71ml4f9p2rgnb43b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.twitterbotsentimentdetector",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "1003272958417-uh10sb2pfgjvts2jf9mhhu61n4s5mp4k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMl7QAOtb0n5hBJ26EidWZZdUFoXtQQtE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1003272958417-uh10sb2pfgjvts2jf9mhhu61n4s5mp4k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
