@@ -9,12 +9,11 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
 
-    const [loggedIn, setLoggedIn] = React.useState("false");
-    const [email, setEmail] = React.useState("");
-    const [handle, setHandle] = React.useState("");
+    const [loggedIn, setLoggedIn] = React.useState("false"); //if user is logged in
+    const [email, setEmail] = React.useState("nickgutz805@gmail.com"); //User Google email
+    const [handle, setHandle] = React.useState(""); //most recently inputted handle
+    const [amountHandles, setAmountHandles] = React.useState(0);
     const [buttonPress, setButtonPress] = React.useState("Unpressed");
-    const [write, setWrite] = React.useState("UnWritten");
-    const [read, setRead] = React.useState("UnRead");
 
     //Google Sign-in Functions
 
@@ -87,6 +86,16 @@ const App = () => {
                     onPress={() => buttonChange()}
                 />
                 <Text>Button: {buttonPress}</Text>
+                <Button
+                    title="Write"
+                    color={generateColor()}
+                    onPress={() =>  writeData(false, "Hi there", )}
+                />
+                <Button
+                    title="Read"
+                    color={generateColor()}
+                    onPress={() => readData("waffle")}
+                />
             </SafeAreaView>
         )
     }
@@ -97,7 +106,7 @@ const App = () => {
                 <Text> User Email: {email}</Text>
                 <TextInput
                     style={styles.input}
-                    onSubmitEditing={(value) => setHandle(value.nativeEvent.text)}
+                    onSubmitEditing={(value) => readData(value.nativeEvent.text)}
                     placeholder="Enter Twitter Handle"
                 />
                 <Text>Entered Handle: {handle} </Text>
@@ -107,19 +116,6 @@ const App = () => {
                     onPress={() => buttonChange()}
                 />
                 <Text>Button: {buttonPress}</Text>
-                <Button
-                    title="Write"
-                    color={generateColor()}
-                    onPress={() => writeData()}
-                />
-                <Text>Write: {write}</Text>
-                <Button
-                    title="Read"
-                    color={generateColor()}
-                    onPress={() => readData()}
-                />
-                <Text>Read: {read}</Text>
-
                 <Button
                     title="Sign Out"
                     color={generateColor()}
@@ -140,40 +136,81 @@ const App = () => {
             setButtonPress("Unpressed");
         }
     }
+    const usersCollection = firestore().collection("Users").doc(email); //The collection in firebase
+    let handles = {};
 
-    const usersCollection = firestore().collection('Users').doc('waffle@house.com');
-
-    const writeData = async () => {
-        if(write === "UnWritten"){
-            setWrite("Written")
-        }
-        else{
-            setWrite("UnWritten")
-        }
-    }
-
-    const readData = async () => {
-        await firestore()
-            .collection('Users')
-            .doc('waffle@house.com')
+    const readData = async (handle) =>{
+        console.log("Read Pressed")
+        setHandle(handle)
+        usersCollection
             .get()
             .then(documentSnapshot => {
-                console.log('User exists: ', documentSnapshot.exists);
-
-                if (documentSnapshot.exists) {
-                    console.log('User data: ', documentSnapshot.data());
+                if(documentSnapshot.exists){
+                    console.log("User Exists")
+                    handles = documentSnapshot.data(); //Stores all previously inputted twitter handles
+                    console.log("Handles: ",handles);
+                    setAmountHandles(Object.keys(handles).length + 1) //Increment to the number for the write key
+                    writeData(true, handle) //writes after determining which
                 }
-            });
-        if(read === "UnRead"){
-            setRead("Read")
+                else{
+                    handles = {}; //Set empty list of handles
+                    setAmountHandles(0)
+                    console.log("User does not exist")
+                    writeData(false, handle)
+                }
+            })
+            .catch((err) => console.error("Read Error: ",err));
+    }
+
+    const writeData = async (userAlreadyExists, handle) => {
+        console.log("Write Pushed")
+        let key = "Handle " + amountHandles;
+        if(userAlreadyExists) { //If user has previously used the app
+            await usersCollection
+                .update({ //adds info to preexisting document
+                    [key]: handle
+                })
+                .then(() => {
+                    console.log("Data Update Written")
+                })
+                .catch((err) => console.error(err))
         }
-        else{
-            setRead("UnRead")
+        else{ //If new users is using the app
+            await usersCollection
+                .set({ //creates new document for new user
+                    [key]: handle
+                })
+                .then(() => {
+                    console.log("Data Set Written")
+                })
+                .catch((err) => console.error("Write Error: ",err))
         }
+        console.log("Write Finished")
     }
 
     return(
+        /*
+        <SafeAreaView>
+            <Button
+                title="Push Me"
+                color={generateColor()}
+                onPress={() => buttonChange()}
+            />
+            <Text>Button: {buttonPress}</Text>
+            <Button
+                title="Write"
+                color={generateColor()}
+                onPress={() =>  writeData()}
+            />
+            <Button
+                title="Read"
+                color={generateColor()}
+                onPress={() => readData()}
+            />
+        </SafeAreaView>
+         */
         //Opens on Login Screen
+
         <NavigationContainer>
             <Stack.Navigator>
                 <Stack.Screen
