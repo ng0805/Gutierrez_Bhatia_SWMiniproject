@@ -14,6 +14,12 @@ const App = () => {
     const [handle, setHandle] = React.useState(""); //most recently inputted handle
     const [amountHandles, setAmountHandles] = React.useState(0);
     const [buttonPress, setButtonPress] = React.useState("Unpressed");
+    const [data, setData] = React.useState({
+                                                        name: "",
+                                                        age: 0,
+                                                        date: "",
+                                                        programming: "",
+                                                    })
 
     //Google Sign-in Functions
 
@@ -25,6 +31,54 @@ const App = () => {
             offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
         });
     }, []);
+
+    /*
+    useEffect(() => {
+        // Using fetch to fetch the api from
+        // flask server it will be redirected to proxy
+        fetch("http://10.0.2.2:5000/data", {
+                method:"POST",
+                headers:{
+                    'Content-Type':"application/json",
+                },
+                body: JSON.stringify({ handle: 'React Hooks POST Request Example' })
+            }).then((res) =>
+            res.json().then((data) => {
+                // Setting a data from api
+                setData({
+                    name: data.Name.title,
+                    age: data.Age,
+                    date: data.Date,
+                    programming: data.programming,
+                });
+            })
+        )
+        .catch((err) => console.error("Flask Post Error: ",err));
+    }, []);
+     */
+
+    const apiCall = (handle) => {
+        // Using fetch to fetch the api from
+        // flask server it will be redirected to proxy
+        fetch("http://10.0.2.2:5000/data", {
+                method:"POST",
+                headers:{
+                    'Content-Type':"application/json",
+                },
+                body: JSON.stringify({ handle: {handle} })
+            }).then((res) =>
+            res.json().then((data) => {
+                // Setting a data from api
+                setData({
+                    name: data.Name.handle,
+                    age: data.Age,
+                    date: data.Date,
+                    programming: data.programming,
+                });
+            })
+        )
+        .catch((err) => console.error("Flask Post Error: ",err));
+    };
 
     let googleSignIn = async (navigation) => {
         try {
@@ -86,16 +140,6 @@ const App = () => {
                     onPress={() => buttonChange()}
                 />
                 <Text>Button: {buttonPress}</Text>
-                <Button
-                    title="Write"
-                    color={generateColor()}
-                    onPress={() =>  writeData(false, "Hi there", )}
-                />
-                <Button
-                    title="Read"
-                    color={generateColor()}
-                    onPress={() => readData("waffle")}
-                />
             </SafeAreaView>
         )
     }
@@ -116,6 +160,10 @@ const App = () => {
                     onPress={() => buttonChange()}
                 />
                 <Text>Button: {buttonPress}</Text>
+                <Text>Name: {data.name.handle}</Text>
+                <Text>Age: {data.age}</Text>
+                <Text>Date: {data.date}</Text>
+                <Text>Programming: {data.programming}</Text>
                 <Button
                     title="Sign Out"
                     color={generateColor()}
@@ -141,30 +189,33 @@ const App = () => {
 
     const readData = async (handle) =>{
         console.log("Read Pressed")
-        setHandle(handle)
+        let totalHandles
+        setHandle(handle);
         usersCollection
             .get()
             .then(documentSnapshot => {
                 if(documentSnapshot.exists){
                     console.log("User Exists")
-                    handles = documentSnapshot.data(); //Stores all previously inputted twitter handles
-                    console.log("Handles: ",handles);
-                    setAmountHandles(Object.keys(handles).length + 1) //Increment to the number for the write key
-                    writeData(true, handle) //writes after determining which
+                    totalHandles = documentSnapshot.data(); //Stores all previously inputted twitter handles
+                    console.log("Total Handles: ",totalHandles);
+                    writeData(true, handle, Object.keys(totalHandles).length) //writes after determining which
+                    apiCall(handle);
                 }
                 else{
                     handles = {}; //Set empty list of handles
-                    setAmountHandles(0)
                     console.log("User does not exist")
-                    writeData(false, handle)
+                    writeData(false, handle, 0)
+                    apiCall(handle)
                 }
             })
             .catch((err) => console.error("Read Error: ",err));
     }
 
-    const writeData = async (userAlreadyExists, handle) => {
+    const writeData = async (userAlreadyExists, handle, numHandles) => {
         console.log("Write Pushed")
-        let key = "Handle " + amountHandles;
+        let keyVal = numHandles+1;
+        let key = "Handle " + keyVal; //gets next number for handle key
+        console.log("Key: ", key);
         if(userAlreadyExists) { //If user has previously used the app
             await usersCollection
                 .update({ //adds info to preexisting document
@@ -189,28 +240,6 @@ const App = () => {
     }
 
     return(
-        /*
-        <SafeAreaView>
-            <Button
-                title="Push Me"
-                color={generateColor()}
-                onPress={() => buttonChange()}
-            />
-            <Text>Button: {buttonPress}</Text>
-            <Button
-                title="Write"
-                color={generateColor()}
-                onPress={() =>  writeData()}
-            />
-            <Button
-                title="Read"
-                color={generateColor()}
-                onPress={() => readData()}
-            />
-        </SafeAreaView>
-         */
-        //Opens on Login Screen
-
         <NavigationContainer>
             <Stack.Navigator>
                 <Stack.Screen
