@@ -1,4 +1,4 @@
-# Import flask and datetime module for showing date and time
+#Sample code to test React Native Fetch call, runs on localhost:5000/data
 from flask import Flask, request
 import datetime
 
