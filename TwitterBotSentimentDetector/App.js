@@ -12,13 +12,22 @@ const App = () => {
     const [loggedIn, setLoggedIn] = React.useState("false"); //if user is logged in
     const [email, setEmail] = React.useState("nickgutz805@gmail.com"); //User Google email
     const [handle, setHandle] = React.useState(""); //most recently inputted handle
-    const [amountHandles, setAmountHandles] = React.useState(0);
     const [buttonPress, setButtonPress] = React.useState("Unpressed");
+    const [userID, setUserID] = React.useState("");
+    const [botometerScore, setBotometerScore] = React.useState(1);
     const [data, setData] = React.useState({
-                                                        name: "",
-                                                        age: 0,
-                                                        date: "",
-                                                        programming: "",
+                                                        handle: "",
+                                                        follower1: "",
+                                                        follower2: "",
+                                                        follower3: "",
+                                                        handleScore:"",
+                                                        handleMagnitude:"",
+                                                        score1:"",
+                                                        magnitude1:"",
+                                                        score2:"",
+                                                        magnitude2:"",
+                                                        score3:"",
+                                                        magnitude3:""
                                                     })
 
     //Google Sign-in Functions
@@ -31,54 +40,6 @@ const App = () => {
             offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
         });
     }, []);
-
-    /*
-    useEffect(() => {
-        // Using fetch to fetch the api from
-        // flask server it will be redirected to proxy
-        fetch("http://10.0.2.2:5000/data", {
-                method:"POST",
-                headers:{
-                    'Content-Type':"application/json",
-                },
-                body: JSON.stringify({ handle: 'React Hooks POST Request Example' })
-            }).then((res) =>
-            res.json().then((data) => {
-                // Setting a data from api
-                setData({
-                    name: data.Name.title,
-                    age: data.Age,
-                    date: data.Date,
-                    programming: data.programming,
-                });
-            })
-        )
-        .catch((err) => console.error("Flask Post Error: ",err));
-    }, []);
-     */
-
-    const apiCall = (handle) => {
-        // Using fetch to fetch the api from
-        // flask server it will be redirected to proxy
-        fetch("http://10.0.2.2:5000/data", {
-                method:"POST",
-                headers:{
-                    'Content-Type':"application/json",
-                },
-                body: JSON.stringify({ handle: {handle} })
-            }).then((res) =>
-            res.json().then((data) => {
-                // Setting a data from api
-                setData({
-                    name: data.Name.handle,
-                    age: data.Age,
-                    date: data.Date,
-                    programming: data.programming,
-                });
-            })
-        )
-        .catch((err) => console.error("Flask Post Error: ",err));
-    };
 
     let googleSignIn = async (navigation) => {
         try {
@@ -133,9 +94,8 @@ const App = () => {
                     size={GoogleSigninButton.Size.Wide}
                     color={GoogleSigninButton.Color.Dark}
                     onPress={() => googleSignIn(navigation)}/>
-                <Text>IsLoggedIn: {loggedIn} </Text>
                 <Button
-                    title="Push Me"
+                    title="Screen Responsive Test"
                     color={generateColor()}
                     onPress={() => buttonChange()}
                 />
@@ -153,28 +113,27 @@ const App = () => {
                     onSubmitEditing={(value) => readData(value.nativeEvent.text)}
                     placeholder="Enter Twitter Handle"
                 />
-                <Text>Entered Handle: {handle} </Text>
+                <Text>UserID: {userID}</Text>
+                <Text>Botometer Score: {botometerScore}</Text>
+                <Text>Submitted Handel: {data.handle}, Score: {data.handleScore}, Magnitude: {data.handleMagnitude}</Text>
+                <Text>Follower 1: {data.follower1}, Score: {data.score1}, Magnitude: {data.magnitude1}</Text>
+                <Text>Follower 2: {data.follower2}, Score: {data.score2}, Magnitude: {data.magnitude2}</Text>
+                <Text>Follower 3: {data.follower3}, Score: {data.score3}, Magnitude: {data.magnitude3}</Text>
                 <Button
-                    title="Push Me"
+                    title="Clear Data"
                     color={generateColor()}
-                    onPress={() => buttonChange()}
+                    onPress={() => clearData()}
                 />
-                <Text>Button: {buttonPress}</Text>
-                <Text>Name: {data.name.handle}</Text>
-                <Text>Age: {data.age}</Text>
-                <Text>Date: {data.date}</Text>
-                <Text>Programming: {data.programming}</Text>
                 <Button
                     title="Sign Out"
                     color={generateColor()}
                     onPress={() => googleSignOut(navigation)}
                 />
-                <Text>IsLoggedIn: {loggedIn} </Text>
             </SafeAreaView>
         )
     };
 
-    //Firebase Functions
+    //Data Functions
 
     let buttonChange = () => {
         if(buttonPress === "Unpressed"){
@@ -184,6 +143,26 @@ const App = () => {
             setButtonPress("Unpressed");
         }
     }
+
+    let clearData = () => {
+        setUserID("")
+        setBotometerScore(1) //set Botscore back to 0
+        setData({ //Reset NLP data
+            handle: "",
+            follower1: "",
+            follower2: "",
+            follower3: "",
+            handleScore:"",
+            handleMagnitude:"",
+            score1:"",
+            magnitude1:"",
+            score2:"",
+            magnitude2:"",
+            score3:"",
+            magnitude3:""
+        })
+    }
+
     const usersCollection = firestore().collection("Users").doc(email); //The collection in firebase
     let handles = {};
 
@@ -198,14 +177,12 @@ const App = () => {
                     console.log("User Exists")
                     totalHandles = documentSnapshot.data(); //Stores all previously inputted twitter handles
                     console.log("Total Handles: ",totalHandles);
-                    writeData(true, handle, Object.keys(totalHandles).length) //writes after determining which
-                    apiCall(handle);
+                    userCheckApiCall(true, handle, Object.keys(totalHandles).length); //send handle to Twitter API to check if user exists
                 }
                 else{
                     handles = {}; //Set empty list of handles
                     console.log("User does not exist")
-                    writeData(false, handle, 0)
-                    apiCall(handle)
+                    userCheckApiCall(false, handle, 0) //send handle to Twitter API to check if user exists
                 }
             })
             .catch((err) => console.error("Read Error: ",err));
@@ -238,6 +215,133 @@ const App = () => {
         }
         console.log("Write Finished")
     }
+
+    //Api Calls
+
+    const userCheckApiCall = (accountExists, handle, amountHandles) => {
+        // Using fetch to fetch the api from
+        // flask server it will be redirected to proxy
+        let jason = {handle: handle}
+        fetch("http://10.0.2.2:5000/data", {
+            method:"POST",
+            headers:{
+                'Content-Type':"application/json",
+            },
+            body: JSON.stringify(jason)
+        }).then((res) =>
+            res.json().then((data) => {
+                console.log("Data: ",data.UserID);
+                // Setting a data from api
+                if(data.UserID === -1){
+                    alert("User not found")
+                    setUserID("Does Not Exist")
+                    setBotometerScore(1) //set Botscore back to 0
+                    setData({ //Reset NLP data
+                        handle: "",
+                        follower1: "",
+                        follower2: "",
+                        follower3: "",
+                        handleScore:"",
+                        handleMagnitude:"",
+                        score1:"",
+                        magnitude1:"",
+                        score2:"",
+                        magnitude2:"",
+                        score3:"",
+                        magnitude3:""
+                    })
+                }
+                else if(data.UserID === 0){
+                    alert("User Not Authorized")
+                    setUserID("Not Authorized")
+                    setBotometerScore(1) //set Botscore back to 0
+                    setData({ //Reset NLP Data
+                        handle: "",
+                        follower1: "",
+                        follower2: "",
+                        follower3: "",
+                        handleScore:"",
+                        handleMagnitude:"",
+                        score1:"",
+                        magnitude1:"",
+                        score2:"",
+                        magnitude2:"",
+                        score3:"",
+                        magnitude3:""
+                    })
+                }
+                else {
+                    setUserID("Exists")
+                    writeData(accountExists, handle, amountHandles) //write to firebase only if user exists
+                        .then(r => console.log("UserCheck write complete"))
+                    botometerApiCall(handle);
+                }
+            })
+        )
+        .catch((err) => {
+                console.error("User Check Fetch Error: ",err)
+        });
+    };
+
+    const botometerApiCall = (handle) => {
+        // Using fetch to fetch the api from
+        // flask server it will be redirected to proxy
+        let jason = {handle: handle}
+        fetch("http://10.0.2.2:8000/data", {
+            method:"POST",
+            headers:{
+                'Content-Type':"application/json",
+            },
+            body: JSON.stringify(jason)
+        }).then((res) =>
+            res.json().then((data) => {
+                console.log("Data: ",data.Botscore);
+                // Setting a data from api
+                setBotometerScore(data.Botscore)
+                googleApiCall(handle); //Call Google Api
+            })
+        )
+        .catch((err) => {
+            console.error("Botometer Fetch Error: ",err)
+        });
+    };
+
+    let googleApiCall = (handle) => {
+        // Using fetch to fetch the api from
+        // flask server it will be redirected to proxy
+        let jason = {handle: handle}
+        fetch("http://10.0.2.2:8080/data", {
+            method:"POST",
+            headers:{
+                'Content-Type':"application/json",
+            },
+            body: JSON.stringify(jason)
+        }).then((res) =>
+            res.json().then((data) => {
+                console.log("Data: ",data);
+                // Setting a data from api
+                setData({
+                        handle: data.Handle,
+                        follower1: data.Follower1,
+                        follower2: data.Follower2,
+                        follower3: data.Follower3,
+                        handleScore: data.HandleScore,
+                        handleMagnitude: data.HandleMagnitude,
+                        score1: data.Score1,
+                        magnitude1: data.Magnitude1,
+                        score2: data.Score2,
+                        magnitude2: data.Magnitude2,
+                        score3: data.Score3,
+                        magnitude3: data.Magnitude3
+                    })
+            })
+        )
+            .catch((err) => {
+                console.error("Google NLP Fetch Error: ",err)
+            });
+    };
+
+    //Display
 
     return(
         <NavigationContainer>
