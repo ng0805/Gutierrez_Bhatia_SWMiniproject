@@ -1,7 +1,7 @@
 # Gutierrez_Bhatia_SWMiniproject
 Nicholas Gutierrez and Suyash Bhatia EC463 SW MiniProject 
 ## How To Use TwitterBotSentimentDetector
-Note: Instructions are for an android emulator in android studio, the app can be pushed to a real android device, but those instruction can be found on the react-native website.
+Note: Instructions are for an android emulator in android studio, the app can be pushed to a real android device, but those instruction can be found on the react-native website. All app code can be found in the TwitterBotSentimentDetector App.js, android/build.gradle,, and android/app/build.gradle
 ### Setup
 #### Step 1:
 Open 5 command terminals, index the first two into the TwitterBotSentimentDetector folder and the other three into the PythonFlaskAPI folder.
